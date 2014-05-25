@@ -40,7 +40,7 @@ sub getData {
 			$type = 'text';
 		} elsif($line =~ m/^<div class="BDsort/) {
 			$type = 'sorts';
-		} elsif($line =~ m/^<div class="([^"])">/) {
+		} elsif($line =~ m/<div class="([^"])">/) {
 			print "$title: Where is $1\n";
 		} elsif($line =~ m/^<b>([^<]+)<\/b>(.+)/) {
 			my $caracName = tidyData($1);
