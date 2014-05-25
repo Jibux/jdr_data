@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for monster in $(ls monsters_tidy); do
-	./tidy.sh monsters_tidy/$monster
+for monster in $(ls monsters); do
+	./tidy.sh monsters/$monster
 done
 
