@@ -1,2 +1,0 @@
-sed -r "s/<a[^>]+>([^<]+)<\/a>/\1/g" monsters/Aasimar.html 
-sed -r "s/<a[^>]+>([^<]+)<\/a>/\1/g ; s/<b>//g" monsters/Aasimar.html 
