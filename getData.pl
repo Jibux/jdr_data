@@ -5,10 +5,17 @@ use strict;
 use Data::Dumper;
 
 
+# !!! monsters_tidy/Élémentaire-De-Leau.html il y en a plusieurs
+
 if($ARGV[0] ne '') {
-	getData($ARGV[0]);
+	my $items = getData($ARGV[0]);
+	#print Dumper $items;
 } else {
-	print "HELLO\n";
+	foreach my $file (glob("monsters_tidy/*")) {
+		#print "$file\n";
+		my $items = getData($file);
+		#print Dumper $items;
+	}
 }
 
 sub getData {
@@ -19,7 +26,7 @@ sub getData {
 	$items->{'sorts'} = '';
 	
 	open(FILE, "<$file") or die "Cannot open $file\n";
-	open(OUT, ">>monsters.csv");
+	#open(OUT, ">>monsters.csv");
 	
 	my $type = 'text';
 	my $title = '';
@@ -36,11 +43,11 @@ sub getData {
 		} elsif($line =~ m/^<div class="(BDsoustitre|box)">([^<]+)</) {
 			my $category = $2;
 			#print "$category\n";
-		} elsif($line =~ m/^<div class="BDtexte">/) {
+		} elsif($line =~ m/<div class="BDtexte">/) {
 			$type = 'text';
 		} elsif($line =~ m/^<div class="BDsort/) {
 			$type = 'sorts';
-		} elsif($line =~ m/<div class="([^"])">/) {
+		} elsif($line =~ m/<div class="([^"]+)"/) {
 			print "$title: Where is $1\n";
 		} elsif($line =~ m/^<b>([^<]+)<\/b>(.+)/) {
 			my $caracName = tidyData($1);
@@ -63,15 +70,18 @@ sub getData {
 		}
 	}
 	
-	close(OUT);
+	#close(OUT);
 	close(FILE);
 
 	#print Dumper $items;
+	
+	return $items;
 }
 
 sub tidyData {
 	my $data = shift;
 
+	$data =~ s#\s*<[^>]+>$##g;
 	$data =~ s/^\s+//g;
 	$data =~ s/\s*[,;.]*\s*$//g;
 
