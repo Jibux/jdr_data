@@ -7,9 +7,6 @@ use Text::Unaccent;
 use String::Similarity;
 use Data::Dumper;
 
-# XP PX ?
-
-# !!! monsters_tidy/Élémentaire-De-Leau.html il y en a plusieurs
 
 if( @ARGV > 0 ) {
 	my $items = getData($ARGV[0]);
@@ -24,22 +21,26 @@ if( @ARGV > 0 ) {
 	}
 
 	my $itemsKeys = {
-		for => 0,
-		dex => 1,
-		con => 2,
-		int => 3,
-		sag => 4,
-		cha => 5,
-		ref => 6,
-		vig => 7,
-		vol => 8,
-		init => 9,
-		pv => 10,
-		ca => 11,
-		xp => 12
+		title => 0,
+		for => 1,
+		dex => 2,
+		con => 3,
+		int => 4,
+		sag => 5,
+		cha => 6,
+		ref => 7,
+		vig => 8,
+		vol => 9,
+		init => 10,
+		pv => 11,
+		ca => 12,
+		xp => 13,
+		sorts => 14,
+		text => 15,
 	};
 
-	my $index = 13;
+	my $index = 16;
+	my $sep = ';';
 
 	foreach (@monsters) {
 		my $items = $_;
@@ -47,20 +48,32 @@ if( @ARGV > 0 ) {
 			if(!exists($itemsKeys->{"$key"})) {
 				$itemsKeys->{"$key"} = $index++;
 			}
+			#print "$items->{$key}\n";
 		}
 	}
 
-	for my $itemsKey ( sort keys %$itemsKeys ) {
-		#for my $itemsKey2 ( sort keys %$itemsKeys ) {
-		#	my $similarity = similarity $itemsKey, $itemsKey2;
-		#	if($similarity != 1 and $similarity > 0.9) {
-		#		#print "$itemsKey <=> $itemsKey2\n";
-		#	}
-		#}
-		#print "$itemsKey\n";
-		print "$itemsKeys->{$itemsKey} : $itemsKey\n";
+	my $indexMax = $index;
+
+	my %itemsKeysReverse = reverse %$itemsKeys;
+
+	open(OUT, ">monsters.csv");
+	for(my $i = 0; $i < $indexMax; $i++) {
+		print OUT "$itemsKeysReverse{$i}$sep";
+	}
+	print OUT "\n";
+	
+	foreach (@monsters) {
+		my $items = $_;
+		for(my $i = 0; $i < $indexMax; $i++) {
+			if(exists($items->{$itemsKeysReverse{$i}})) {
+				print OUT "\"$items->{$itemsKeysReverse{$i}}\"";
+			}
+			print OUT $sep;
+		}
+		print OUT "\n";
 	}
 
+	close(OUT);
 }
 
 sub getData {
@@ -99,11 +112,20 @@ sub getData {
 
 			$caracName = tidyDataSpell($caracName);
 			
-			if($caracName eq 'cac') {
-				print "It is $file\n";
+			#if($caracName eq 'cac') {
+			#	print "It is $file\n";
+			#}
+
+			if(exists($items->{"$caracName"})) {
+				if($caracName eq 'sorts') {
+					$items->{"$caracName"} .= "*$caracVal";
+				} elsif($items->{"$caracName"} ne "$caracVal") {
+					#print "===$title : $caracName===\n$items->{$caracName} - $caracVal\n";
+					$items->{"$caracName"} .= " // $caracVal";
+				}
+			} else {
+				$items->{"$caracName"} = "$caracVal";
 			}
-	
-			$items->{"$caracName"} = $caracVal;
 		} elsif($line =~ m/^[^<]+/) {
 			if($type eq 'text' or $type eq 'sorts') {
 				$items->{"$type"} .= "*$line";
@@ -131,6 +153,8 @@ sub tidyData {
 	$data = unac_string('UTF-8', $data);
 
 	$data = lc($data);
+
+	$data =~ s/"/\\"/g;
 
 	return $data;
 }
