@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Text::Unaccent;
+use String::Similarity;
 use Data::Dumper;
 
 # XP PX ?
@@ -22,8 +23,23 @@ if( @ARGV > 0 ) {
 		push(@monsters, $items);
 	}
 
-	my $itemsKeys = {};
-	my $index = 0;
+	my $itemsKeys = {
+		for => 0,
+		dex => 1,
+		con => 2,
+		int => 3,
+		sag => 4,
+		cha => 5,
+		ref => 6,
+		vig => 7,
+		vol => 8,
+		init => 9,
+		pv => 10,
+		ca => 11,
+		xp => 12
+	};
+
+	my $index = 13;
 
 	foreach (@monsters) {
 		my $items = $_;
@@ -35,7 +51,14 @@ if( @ARGV > 0 ) {
 	}
 
 	for my $itemsKey ( sort keys %$itemsKeys ) {
-		print "$itemsKey : $itemsKeys->{$itemsKey}\n";
+		#for my $itemsKey2 ( sort keys %$itemsKeys ) {
+		#	my $similarity = similarity $itemsKey, $itemsKey2;
+		#	if($similarity != 1 and $similarity > 0.9) {
+		#		#print "$itemsKey <=> $itemsKey2\n";
+		#	}
+		#}
+		#print "$itemsKey\n";
+		print "$itemsKeys->{$itemsKey} : $itemsKey\n";
 	}
 
 }
@@ -48,7 +71,6 @@ sub getData {
 	$items->{'sorts'} = '';
 	
 	open(FILE, "<$file") or die "Cannot open $file\n";
-	#open(OUT, ">>monsters.csv");
 	
 	my $type = 'text';
 	my $title = '';
@@ -60,11 +82,9 @@ sub getData {
 	
 		if($line =~ m/^<div class="BDtitre">([^<]+)</) {
 			$title = $1;
-			#print OUT "\n\"$title";
 			$items->{'title'} = $title;
 		} elsif($line =~ m/^<div class="(BDsoustitre|box)">([^<]+)</) {
 			my $category = $2;
-			#print "$category\n";
 		} elsif($line =~ m/<div class="BDtexte">/) {
 			$type = 'text';
 		} elsif($line =~ m/^<div class="BDsort/) {
@@ -74,15 +94,17 @@ sub getData {
 		} elsif($line =~ m/^<b>([^<]+)<\/b>(.+)/) {
 			my $caracName = tidyData($1);
 			my $caracVal = tidyData($2);
+
+			$caracName =~ s/\s*\(\w+\)$//g;
+
+			$caracName = tidyDataSpell($caracName);
+			
+			if($caracName eq 'cac') {
+				print "It is $file\n";
+			}
 	
 			$items->{"$caracName"} = $caracVal;
-	
-			#print "Name:\t$caracName --- Val: $caracVal\n";
-			#print OUT "\",\"$caracVal";
 		} elsif($line =~ m/^[^<]+/) {
-			#print "Line:\t$line\n";
-			#print OUT "\n$line";
-	
 			if($type eq 'text' or $type eq 'sorts') {
 				$items->{"$type"} .= "*$line";
 			} else {
@@ -92,7 +114,6 @@ sub getData {
 		}
 	}
 	
-	#close(OUT);
 	close(FILE);
 
 	#print Dumper $items;
@@ -110,6 +131,30 @@ sub tidyData {
 	$data = unac_string('UTF-8', $data);
 
 	$data = lc($data);
+
+	return $data;
+}
+
+sub tidyDataSpell {
+	my $data = shift;
+	
+	$data =~ s/^cac$/corps a corps/g;
+	$data =~ s/changement de la forme$/changement de forme/g;
+	$data =~ s/engloutissement d'ame$/engloutissement d'ames/g;
+	$data =~ s/faiblesse$/faiblesses/g;
+	$data =~ s/filament$/filaments/g;
+	$data =~ s/immunite$/immunites/g;
+	$data =~ s/langue$/langues/g;
+	$data =~ s/porteur de maladie$/porteur de maladies/g;
+	$data =~ s/px$/xp/g;
+	$data =~ s/rayon oculaire$/rayons oculaires/g;
+	$data =~ s/renvoi des sorts$/renvoi de sorts/g;
+	$data =~ s/representation bardique$/representations bardiques/g;
+	$data =~ s/resistance$/resistances/g;
+	$data =~ s/sorts d'ensorceleurs connus$/sorts d'ensorceleur connus/g;
+	$data =~ s/sorts de pretres prepares$/sorts de pretre prepares/g;
+	$data =~ s/souffles$/souffle/g;
+	$data =~ s/utilisation du poison$/utilisation des poisons/g;
 
 	return $data;
 }
