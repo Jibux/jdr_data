@@ -14,39 +14,59 @@ if( @ARGV > 0 ) {
 } else {
 	my @monsters;
 
+	my $i = 0;
+
+	my $itemsKeys = {
+		title => $i++,
+		for => $i++,
+		dex => $i++,
+		con => $i++,
+		int => $i++,
+		sag => $i++,
+		cha => $i++,
+		ref => $i++,
+		vig => $i++,
+		vol => $i++,
+		init => $i++,
+		pv => $i++,
+		ca => $i++,
+		xp => $i++,
+		vd => $i++,
+		sorts => $i++,
+		resistances => $i++,
+		'corps a corps' => $i++,
+		distance => $i++,
+		'attaques speciales' => $i++,
+		dons => $i++,
+		competences => $i++,
+		'modificateurs raciaux' => $i++,
+		sens => $i++,
+		langues => $i++,
+		environnement => $i++,
+		tresor => $i++,
+		'organisation sociale' => $i++,
+		bba => $i++,
+		bmo => $i++,
+		dmd => $i++,
+		text => $i++,
+		misc => $i++,
+	};
+
+	my $index = $i;
+	my $sep = ';';
+
 	foreach my $file (glob("monsters_tidy/*")) {
 		#print "$file\n";
 		my $items = getData($file);
 		push(@monsters, $items);
 	}
 
-	my $itemsKeys = {
-		title => 0,
-		for => 1,
-		dex => 2,
-		con => 3,
-		int => 4,
-		sag => 5,
-		cha => 6,
-		ref => 7,
-		vig => 8,
-		vol => 9,
-		init => 10,
-		pv => 11,
-		ca => 12,
-		xp => 13,
-		sorts => 14,
-		text => 15,
-	};
-
-	my $index = 16;
-	my $sep = ';';
-
 	foreach (@monsters) {
 		my $items = $_;
 		for my $key ( keys %$items ) {
 			if(!exists($itemsKeys->{"$key"})) {
-				$itemsKeys->{"$key"} = $index++;
+				#$itemsKeys->{"$key"} = $index++;
+				$items->{misc} .= "* $key".' : '.$items->{"$key"}."\n";
 			}
 			#print "$items->{$key}\n";
 		}
@@ -66,6 +86,7 @@ if( @ARGV > 0 ) {
 		my $items = $_;
 		for(my $i = 0; $i < $indexMax; $i++) {
 			if(exists($items->{$itemsKeysReverse{$i}})) {
+				chomp($items->{$itemsKeysReverse{$i}});
 				print OUT "\"$items->{$itemsKeysReverse{$i}}\"";
 			}
 			print OUT $sep;
@@ -82,6 +103,7 @@ sub getData {
 	
 	$items->{'text'} = '';
 	$items->{'sorts'} = '';
+	$items->{'misc'} = '';
 	
 	open(FILE, "<$file") or die "Cannot open $file\n";
 	
@@ -118,17 +140,17 @@ sub getData {
 
 			if(exists($items->{"$caracName"})) {
 				if($caracName eq 'sorts') {
-					$items->{"$caracName"} .= "*$caracVal";
+					$items->{"$caracName"} .= "* $caracVal\n";
 				} elsif($items->{"$caracName"} ne "$caracVal") {
 					#print "===$title : $caracName===\n$items->{$caracName} - $caracVal\n";
-					$items->{"$caracName"} .= " // $caracVal";
+					$items->{"$caracName"} .= "\n$caracVal";
 				}
 			} else {
 				$items->{"$caracName"} = "$caracVal";
 			}
 		} elsif($line =~ m/^[^<]+/) {
 			if($type eq 'text' or $type eq 'sorts') {
-				$items->{"$type"} .= "*$line";
+				$items->{"$type"} .= "* $line\n";
 			} else {
 				print "$title: Where are we?\n";
 				# Do nothing
@@ -154,7 +176,7 @@ sub tidyData {
 
 	$data = lc($data);
 
-	$data =~ s/"/\\"/g;
+	$data =~ s/"/'/g;
 
 	return $data;
 }
